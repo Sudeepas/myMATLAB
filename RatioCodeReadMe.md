@@ -1,6 +1,6 @@
 ## To find ROIs for FRET-FLIM data.
 
-Proceed as follows:
+# Proceed as follows:
 * Go to the script names ratio_image and double click on it.
 * This will open MATLAB and the script for you.
 * Use the run (green arrow) icon to run the code.
