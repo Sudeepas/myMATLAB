@@ -7,10 +7,10 @@ global img1 img2 img3 im
 
 % Initializing parameters
 log_size = 10;          % Specifiy size of log filter
-log_sigma = 0.5; % Specify standard deviation of log filter
-Pixel_threshold = 20; % Specify number of pixels to remove small objects (less than the value specified)
+log_sigma = 0.5;        % Specify standard deviation of log filter
+Pixel_threshold = 20;   % Specify number of pixels to remove small objects (less than the value specified)
 Pixel_connectivity = 8; % Specify the connectivity of the pixels
-color_map = 'jet'; % Specify the color scheme to be used for ROI image
+color_map = 'jet';      % Specify the color scheme to be used for ROI image
 
 % Setting the path to the codes in MATLAB
 CodesLocation = pwd;
@@ -107,13 +107,14 @@ for filen = 1:length(txtFiles1)
             % value of 1 that have an intensity value of greater than or
             % equal to the mean intensity value for Ch2 image
             im(ni).mask_img2(1:256,1:256) = 0;   % Change 256 to general for any sized image
-            for i = 1:256   
-                for j = 1:256
-                    if im(ni).double_img2(i,j) >= im(ni).mean_img2
-                        im(ni).mask_img2(i,j) = 1;
-                    end
-                end
-            end
+            im(ni).mask_img2 = im(ni).double_img2 >= im(ni).mean_img2;
+%             for i = 1:256   
+%                 for j = 1:256
+%                     if im(ni).double_img2(i,j) >= im(ni).mean_img2
+%                         im(ni).mask_img2(i,j) = 1;
+%                     end
+%                 end
+%             end
 % figure()
 % imagesc(mask_img2)
 % colormap gray
@@ -146,37 +147,58 @@ for filen = 1:length(txtFiles1)
             % All small regions are removed using bwareaopen function
             im(ni).BW1 = bwareaopen(im(ni).bw_img2, Pixel_threshold, Pixel_connectivity);
 % figure()
-% imshow(im(ni).BW1)
+% imshow(im(ni).BW1)          
 
-            [im(ni).L, im(ni).num] = bwlabel(im(ni).BW1, 4);
+            [im(ni).L, im(ni).num] = bwlabel(im(ni).BW1, 4);                             
+%             for n = 1:im(ni).num
+                im(ni).stats1 = regionprops(im(ni).L, im(ni).double_img1(7:end-6,7:end-6),'MinIntensity');
+                im(ni).stats2 = regionprops(im(ni).L, im(ni).double_img2(7:end-6,7:end-6),'MinIntensity');
+                im(ni).stats3 = regionprops(im(ni).L, im(ni).double_img3(7:end-6,7:end-6),'MinIntensity');                        
+%             end
+        
+            flag = 0;
+            im(ni).newL = im(ni).L;
+            for s = 1:length(im(ni).stats1)
+                if im(ni).stats3(s).MinIntensity == 0
+                    [im(ni).r,im(ni).c] = find(im(ni).L == s);
+                    for nrc = 1:length(im(ni).r)
+                        im(ni).newL(im(ni).r(nrc),im(ni).c(nrc)) = 0;
+                    end                        
+                    flag = flag + 1;
+                else
+                    [im(ni).r,im(ni).c] = find(im(ni).L == s);
+                    for nrc = 1:length(im(ni).r)
+                        im(ni).newL(im(ni).r(nrc),im(ni).c(nrc)) = im(ni).L(im(ni).r(nrc),im(ni).c(nrc)) - flag;
+                    end
+                end 
+            end
+            
             colormap_string = sprintf('%s',color_map);
-            im(ni).RGB = label2rgb(im(ni).L,colormap_string,'k','shuffle');
+            im(ni).RGB = label2rgb(im(ni).newL,colormap_string,'k','shuffle');
             im(ni).RGBfig = figure();
             imagesc(im(ni).RGB)
             axis equal; axis tight; axis off
             hold on
             
-            for n = 1:im(ni).num
-%     stats = regionprops(L, ratio_img(7:end-6,7:end-6), 'MeanIntensity', 'Area');
-                im(ni).stats1 = regionprops(im(ni).L, im(ni).double_img1(7:end-6,7:end-6), 'MeanIntensity', 'Area','Centroid','Extrema');
-                im(ni).stats2 = regionprops(im(ni).L, im(ni).double_img2(7:end-6,7:end-6), 'MeanIntensity', 'Area','Centroid','Extrema');
-                im(ni).stats3 = regionprops(im(ni).L, im(ni).double_img3(7:end-6,7:end-6), 'MeanIntensity', 'Area','Centroid','Extrema');    
-            end
-        
-        
-            for s = 1:length(im(ni).stats1)
-                im(ni).stats(s).MeanIntensity = im(ni).stats1(s).MeanIntensity/im(ni).stats2(s).MeanIntensity;
-                im(ni).Ratio_MeanIntensity(s,1) = im(ni).stats(s).MeanIntensity;
-                im(ni).img2_MeanIntensity(s,1) = im(ni).stats2(s).MeanIntensity;
-                im(ni).img1_MeanIntensity(s,1) = im(ni).stats1(s).MeanIntensity;
-                im(ni).img3_MeanIntensity(s,1) = im(ni).stats3(s).MeanIntensity;
-                im(ni).SubImageNo(s,1) = SubImageTotal;
-            
-                text(im(ni).stats2(s).Extrema(8,1),im(ni).stats2(s).Extrema(8,2),num2str(s),'BackgroundColor','w','color','r','Fontsize',5)
+%             for newn = 1:im(ni).newnum
+                im(ni).newstats1 = regionprops(im(ni).newL, im(ni).double_img1(7:end-6,7:end-6), 'MeanIntensity', 'Area','Centroid','Extrema');
+                im(ni).newstats2 = regionprops(im(ni).newL, im(ni).double_img2(7:end-6,7:end-6), 'MeanIntensity', 'Area','Centroid','Extrema');
+                im(ni).newstats3 = regionprops(im(ni).newL, im(ni).double_img3(7:end-6,7:end-6), 'MeanIntensity', 'Area','Centroid','Extrema');                        
+%             end                
+               
+            for news = 1:length(im(ni).newstats1)
+                im(ni).stats(news).MeanIntensity = im(ni).newstats1(news).MeanIntensity/im(ni).newstats2(news).MeanIntensity;
+                im(ni).Ratio_MeanIntensity(news,1) = im(ni).stats(news).MeanIntensity;
+                im(ni).img2_MeanIntensity(news,1) = im(ni).newstats2(news).MeanIntensity;
+                im(ni).img1_MeanIntensity(news,1) = im(ni).newstats1(news).MeanIntensity;
+                im(ni).img3_MeanIntensity(news,1) = im(ni).newstats3(news).MeanIntensity;
+                im(ni).SubImageNo(news,1) = SubImageTotal;  
+                
+                text(im(ni).newstats2(news).Extrema(8,1),im(ni).newstats2(news).Extrema(8,2),num2str(news),'BackgroundColor','w','color','r','Fontsize',5)
             end
             hold off
         
-            im(ni).RegionNo = 1:length(im(ni).stats1);      
+            im(ni).RegionNo = 1:length(im(ni).newstats1);      
         
 %         hist_x = 10;
 %         figure()
