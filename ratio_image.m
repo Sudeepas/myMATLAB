@@ -108,16 +108,6 @@ for filen = 1:length(txtFiles1)
             % equal to the mean intensity value for Ch2 image
             im(ni).mask_img2(1:256,1:256) = 0;   % Change 256 to general for any sized image
             im(ni).mask_img2 = im(ni).double_img2 >= im(ni).mean_img2;
-%             for i = 1:256   
-%                 for j = 1:256
-%                     if im(ni).double_img2(i,j) >= im(ni).mean_img2
-%                         im(ni).mask_img2(i,j) = 1;
-%                     end
-%                 end
-%             end
-% figure()
-% imagesc(mask_img2)
-% colormap gray
 
             % Design a log filter (10 by 10 and sigma of 0.5)
             im(ni).logfilter=fspecial('log',log_size,log_sigma);
